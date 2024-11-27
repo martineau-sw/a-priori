@@ -7,6 +7,7 @@ personal projects and exercises.
 
 ```js
 // ./tests/some_case.js
+
 import Assertion from 'assertion.js';
 
 const testCase = Assertion()
@@ -45,7 +46,8 @@ const test = Test()
 
 Container for test cases that supplies the function to be 
 tested and a function to determine if the test case has 
-passed.
+passed. Served as a builder with simple assertions to 
+encourage proper usage
 
 Consists of 3 required properties:
 1. Target function
