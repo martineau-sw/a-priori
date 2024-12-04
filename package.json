@@ -1,10 +1,14 @@
 {
   "name": "a-priori",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Personal JS testing micro-library",
   "main": "index.js",
+  "bin": {
+    "a-priori": "cli.js"
+  },
   "type": "module",
   "scripts": {
+    "test": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -12,6 +16,8 @@
   },
   "keywords": [],
   "author": "Seth Martineau",
-  
+  "devDependencies": {
+    "a-priori": "^0.0.0"
+  },
   "license": "MIT"
 }

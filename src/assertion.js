@@ -1,80 +1,159 @@
 class Assertion {
-  #label = undefined;
-  #args = undefined;
-  #expect = undefined;
-  #actual = undefined;
-  #pass = false;
-  #options = {
-    expectFail: false,
-    skip: false
+  #summary = undefined;
+  #arguments = undefined;
+  #expects = undefined;
+  #yields = undefined;
+  #valid = false;
+  #omit = false;
+
+  constructor(summary) {
+    console.assert(summary !== undefined, 'string summary expected');
+    console.assert(typeof summary === 'string', 'string summary expected');
+    console.assert(summary.length, 'non-empty string for summary expected');
+    this.#summary = summary;
   }
 
-  constructor() {
-    Object.seal(this.#options);
-    Object.seal(this);
-  }
+  get arguments() { return this.#arguments; }
+  get expects() { return this.#expects; }
+  get yields() { return this.#yields; }
+  get valid() { return this.#valid; }
+  get omitted() { return this.#omit; }
 
-  get args() { return this.#args; }
-  get expect() { return this.#expect; }
-  get passed() { return this.#pass; }
-  get actual() { return this.#actual; }
-  get options() { return this.#options; }
+  static builder(summary, sequent = undefined) {
+    const assertion = new Assertion(summary);
 
-  static builder() {
-    const assertion = new Assertion();
-
-    const setLabel = function(string) {
- 
-      console.assert(assertion.#label === undefined, 'redefining label\nfrom: %s\nto: %s', assertion.#label, string);
-      assertion.#label = string;
-
+    const skip = function() {
+      assertion.#omit = true;
       return this;
     }
 
-    const setArgs = function(...args) {
-      console.assert(assertion.#args === undefined, 'redefining args\nfrom: %o\nto: %o', assertion.#args, args);
-      assertion.#args = args;
+    const when = function(...args) {
+      console.assert(assertion.#arguments === undefined, 'redefining arguments\nfrom: %o\nto: %o', assertion.#arguments, args);
+      assertion.#arguments = args;
       return this;
     }
 
-    const setExpect = function(expect) {
-      console.assert(assertion.#expect === undefined, 'redefining expect\nfrom: %o\nto: %o', assertion.#expect, expect);
-      assertion.#expect = expect;
-      return this;
-    }
+    const then = function(expect) {
+      console.assert(assertion.#summary !== undefined, 'summary undefined');
+      console.assert(assertion.#arguments !== undefined, 'arguments undefined');
+      assertion.#expects = expect;
+      console.assert(assertion.#expects !== undefined, 'expected value undefined');
 
-    const addOptions = function(options) {
-      assertion.#options = Object.assign(assertion.#options, options);
-      return this;
-    }
 
-    const build = function() {
-      console.assert(assertion.#label !== undefined, 'label undefined');
-      console.assert(assertion.#args !== undefined, 'args undefined');
-      console.assert(assertion.#expect !== undefined, 'expect undefined');
+      if (sequent !== undefined) {
+        sequent.add(assertion);
+        return sequent;
+      }
+      
       return assertion;
     }
 
-    return { setLabel, setArgs, setExpect, addOptions, build }
+    return { skip, when, then }
   }
 
-  skip() {
-    this.#options.skip = true;
+  omit() {
+    this.#omit = true;
   }
 
-  execute(target, condition) {
-    this.#actual = target(...this.#args);
-    this.#pass = condition.bind(this)();
-    return this.#pass;
+  evaluate(formula, equate) {
+    this.#yields = formula(...this.#arguments);
+    this.#valid = equate(this.yields, this.expects);
+    return this.#valid;
   }
 
-  toString(expand) {
-    return `[${this.#pass ? 'PASS' : this.#options.skip ? 'SKIP' : 'FAIL'}] ` +
-           `${this.#label}` +
-           (expand && !this.#options.skip ? 
-           (`\n\n\targs:\t${JSON.stringify(this.#args)}` +
-           `\n\tactual:\t${JSON.stringify(this.#actual)}` +
-           `\n\texpect:\t${JSON.stringify(this.#expect)}\n`) : '');
+  toString(formula) {
+    return  `${this.#valid ? '🟢' : this.#omit ? '🟡' : '🔴'} ` +
+            `${this.#omit ? 'omitted' :
+            `\x1b[1m${formula.name}(${this.#formatArgsToString()}) ⊢ ${this.#valid ? `${this.#expects}` :
+            `\x1b[9m${this.#expects}\x1b[29m ${this.#yields}`
+            }`}` + `\x1b[22m\n${this.#summary}`
+  }
+
+  print(formula) {
+    const options = {
+      valid: {
+        prefix: '╿',
+        func: `\x1b[32m`, // bold, green
+        summary: '\x1b[32m', // green
+      },
+      invalid: {
+        prefix: '┿',
+        func: `\x1b[31m`, // bold, red
+        summary: '\x1b[31m', // red
+      },
+      omitted: {
+        prefix: '┊',
+        func: `\x1b[2m`, // dim
+        summary: '\x1b[2m', // dim
+      },
+
+      cap: '└',
+      
+      info: [],
+
+      getFnString: function(assertion) {
+
+        const signature = `${formula.name} ( ${assertion.#formatArgsToString()} )`
+        let optionSet = this.invalid;
+
+        if (assertion.#valid) {
+          optionSet = this.valid;
+          return `${optionSet.func}${optionSet.prefix}\x1b[1m ${signature} ⊢ ${assertion.#yields} \x1b[0m`;
+        }
+
+        if(assertion.#omit) {
+          optionSet = this.omitted;
+          return `${optionSet.func}${optionSet.prefix}\x1b[1m ${signature} \x1b[0m`;
+        }
+
+        this.info.push(`\x1b[2m${optionSet.summary}${signature} ⊢ ${assertion.#yields}\x1b[0m`);
+
+        return `${optionSet.func}${optionSet.prefix}\x1b[1m ${signature} ⊬ ${assertion.#expects}\x1b[0m`;
+      },
+
+      getSummaryString: function(assertion) {
+
+        const lines = this.info.length > 0 ? 
+          (() => { 
+            this.info.unshift('');
+            this.info.push('');
+            return this.info.concat(assertion.#summary.split('\n')) 
+          })() :
+          assertion.#summary.split('\n');
+
+        let optionSet = this.invalid;
+
+        if (assertion.#valid) {
+          optionSet = this.valid;
+        } else if (assertion.#omit) {
+          optionSet = this.omitted;
+        }
+
+        return lines.map((line, index) => {
+          let prefix = '┊'; 
+          if (index === lines.length - 1) prefix = this.cap;
+          return `${optionSet.summary}${prefix} ${line} \x1b[0m`;
+        });
+      }
+    };
+    
+    console.group();
+    console.log(options.getFnString(this));
+    options.getSummaryString(this).forEach((string) => {
+      console.log(string);
+    })
+    console.groupEnd();
+  }
+
+  #formatArgsToString() {
+    return this.#arguments.reduce((string, element, index) => {
+      if (typeof element === 'string') { 
+        return `${string}, ` + `"${element}"`; 
+      }
+
+      return `${string}, ` + `${element.toString()}`; 
+    });
+    
   }
 }
 

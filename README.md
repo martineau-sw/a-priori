@@ -1,70 +1,81 @@
 # a-priori
 
-Unit test micro-library for test-driven development of small 
-personal projects and exercises. 
+Lightweight unit test micro-library for test-driven development 
+of small personal projects and exercises. 
+
+Created with the intent to ~~quickly~~ vaguely formalize unit/system 
+requirements as axioms formulated as material conditions. 
+(e.g. $P(x, y, z) \longrightarrow Q $)
+
+Takes inspiration from the information gathered on Wikipedia of 
+formal logic systems in span of a single sleepless night. 
 
 ## Assertion
 
-```js
-// ./tests/some_case.js
+An object consisting of a summary, function arguments, and 
+expected output.
 
-import Assertion from 'assertion.js';
+## Sequent
 
-const testCase = Assertion()
-  .setLabel('differently typed args to string')
-  .setArgs(1, {}, false, null)
-  .setExpect('1, {}, false, null')
-  .build();
+An object consisting of a function as the subject of test cases 
+(formula), a callback to predicate equality between the returned
+value and expected output, and a set of assertions.
+
+## Usage
+
+1. Create tests within `project_directory/tests/` with `.test.js`
+suffix
+2. Default import `sequent.js`
+3. Declare sequent with subject function and equality function
+4. Add assertions using chained function calls
+  - `when(arguments)` accepts arguments to pass into subject 
+  function
+  - `then(expected)` accepts expected return value of subject
+  function `when` parameters are true.
+5. `npx run-func some/dir/a-priori.js run`
+
+### Example
+
+```
+project/
+| src/
+| | add.js
+| | sub.js
+| tests/
+| | add.test.js
+| | sub.test.js
 ```
 
-A test case that expects equality between expected and 
-actual values. Served as a builder with simple assertions to
-encourage proper usage.
-
-Consists of 3 required properties:
-1. Label string
-2. Function arguments
-3. Expected value from inputs
-
-## Test
-
 ```js
-// ./tests/some_test.js
+// src/add.js
+function add() {
+  return +a + b;
+}
 
-import { testCase } from './tests/some_case.js';
-import { concat } from '../src/strings.js';
-import Test from 'test.js';
-
-const test = Test()
-  .setTarget(concat)
-  .setCondition(function() {
-    return this.expect === this.actual;
-  })
-  .addCase(testCase)
-  .build();
+// src/sub.js
+function sub() {
+  return a - b;
+}
 ```
 
-Container for test cases that supplies the function to be 
-tested and a function to determine if the test case has 
-passed. Served as a builder with simple assertions to 
-encourage proper usage
-
-Consists of 3 required properties:
-1. Target function
-2. Condition function to evaluate equality
-3. At least 1 test case
-
-## Set
-
 ```js
-// ./tests/some_set.js
+// tests/sub.test.js
 
-import { test } from './some_test.js';
-import stringTests from 'set.js';
+import sequent from './some/dir/to/sequent.js';
 
-stringTests.add(test);
-stringTests.run();
+sequent (sub, (a, b) => a === b)
+  .assertion('numbers: positive difference')
+    .when(2, 1)
+    .then(1)
+  .assertion('numbers: negative difference')
+    .when(1, 2)
+    .then(-1)
+  .assertion('numbers: handles small floats')
+    .when(0.000005, 0.000008)
+    .then(-0.000003)
+  .assertion('strings: rejects strings').skip()
+    .when('-2', '-5')
+    .then(undefined)
+.end();
 ```
 
-Container for tests for conveniently grouping tests. Has no
-required properties.
