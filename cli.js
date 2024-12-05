@@ -1,6 +1,5 @@
 #!bin/usr/env node 
 
-import { run, importTests } from './src/a-priori.js';
+import { importAndRunTests } from './src/a-priori.js';
 
-importTests();
-run();
+importAndRunTests();

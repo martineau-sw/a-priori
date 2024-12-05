@@ -1,8 +1,6 @@
-import run, { importTests } from './src/a-priori.js';
+import { importAndRunTests } from './src/a-priori.js';
 import formulate from './src/test.js';
-import assert from './src/assertion.js';
 
-importTests();
-run();
+importAndRunTests();
 
 export default formulate;

@@ -1,6 +1,6 @@
 import Printer from "./printer.js";
 
-class Assertion {
+export class Assertion {
   #summary = undefined;
   #args = undefined;
   #expect = undefined;
@@ -68,6 +68,8 @@ class Assertion {
     const color = this.passed ? '\x1b[22;39;32m' :
                   this.failed ? '\x1b[22;39;31m' :
                                 '\x1b[22;39;2m'; 
+
+    if (!formula.length) formula = formula.toString();
 
     this.#headString(formula, color);
     this.#bodyString(formula, color);

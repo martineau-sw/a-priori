@@ -4,7 +4,7 @@ function add(a, b) {
   return a + b;
 }
 
-formulate(add, (a, b) => a === b)
+formulate((a, b) => a + b, (a, b) => a === b)
   .assert('adds')
     .when(2, 2)
     .then(4)

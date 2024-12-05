@@ -17,67 +17,80 @@ function as a test, and finally, append `then` with expected return.
 
 ## Overview
 
-### `formulate(targetFunction, equalFunction) -> Test.builder` *static method of `Test`*
-  Creates test and sets target function and evaluation functions to determine 
-  equality between actual return value and expected value. 
+### `formulate(targetFunction, equalFunction) -> Test.builder` 
 
-  - `targetFunction`, any named function object
-  - `equalFunction`, function object with 2 parameters. For simple value types: 
-  `(a, b) => a === b` is sufficent
+*static method of `Test`*
 
-  ```js
-  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+Creates test and sets target function and evaluation functions to determine 
+equality between actual return value and expected value. 
+
+- `targetFunction`, any named function object
+- `equalFunction`, function object with 2 parameters. For simple value types: 
+`(a, b) => a === b` is sufficent
+
+```js
+formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+  // ...
+```
+
+### `assert(summary) -> Assertion.builder` 
+
+*static member of `Test.builder`*
+  
+Creates assertion and sets string that describes the assertion.
+
+- `summary`, string that describes the assertion
+
+```js
+formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+  .assert('number addition') 
+  // ...
+```
+
+### `when(...arguments) -> Assertion.builder` 
+*static member of `Assertion.builder`*
+
+Sets arguments to supply for target function.
+
+- `...arguments`, variadic, pass these arguments as if they are to be passed
+to the target function
+
+```js
+formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+  .assert('number addition') 
+    .when(2, 2) // add(2, 2)
     // ...
-  ```
+```
 
-### `assert(summary) -> Assertion.builder` *static member of `Test.builder`*
-  Creates assertion and sets string that describes the assertion.
+### `then(expected) -> Test.builder` 
 
-  - `summary`, string that describes the assertion
+*static member of `Assertion.builder`*
 
-  ```js
-  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
-    .assert('number addition') 
+Sets expected value for assertion, returns test builder.
+
+- `expected`, expected return value of target function with `when` arguments
+
+```js
+formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+  .assert('number addition') 
+    .when(2, 2)
+    .then(4)
     // ...
-  ```
+```
 
-### `when(...arguments) -> Assertion.builder` *static member of `Assertion.builder`*
-  Sets arguments to supply for target function.
+### `end() -> Test` 
+*static method of `Test.builder`*
 
-  - `...arguments`, variadic, pass these arguments as if they are to be passed
-  to the target function
+Submits test to testing application.
 
-  ```js
-  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
-    .assert('number addition') 
-      .when(2, 2) // add(2, 2)
-      // ...
-  ```
-
-### `then(expected) -> Test.builder` *static member of `Assertion.builder`*
-  Sets expected value for assertion, returns test builder.
-
-  - `expected`, expected return value of target function with `when` arguments
-
-  ```js
-  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
-    .assert('number addition') 
-      .when(2, 2)
-      .then(4)
-      // ...
-  ```
-
-### `end() -> Test` *static method of `Test.builder`*
-  Submits test to testing application.
-
-  ```js
-  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
-    .assert('number addition') 
-      .when(2, 2)
-      .then(4)
-      // ...
-  .end();
-  ```
+```js
+formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+  .assert('number addition') 
+    .when(2, 2)
+    .then(4)
+    // ...
+.end();
+```
 
 ### `skip() -> undefined`
 *static method of `Test.builder` and `Assertion.builder`*

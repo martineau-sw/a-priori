@@ -3,7 +3,7 @@ import * as path from 'path';
 
 const sequents = [];
 
-export function importTests() {
+export function importAndRunTests() {
   const directory = path.resolve(process.cwd(), 'tests/');
   fs.readdirSync(directory).filter(file => {
     if(!file.endsWith('.test.js')) return;
@@ -19,6 +19,4 @@ export function addSequent(sequent) {
   sequents.push(sequent);
 }
 
-export default function run() {
-}
 
