@@ -16,8 +16,8 @@ class Assertion {
   }
 
   get args() { return this.#args; }
-  get expect() { return this.#expect; }
-  get actual() { return this.#actual; }
+  get expect() { return typeof this.#expect === 'string' ? `'${this.#expect}'` : this.#expect; }
+  get actual() { return typeof this.#actual === 'string' ? `'${this.#actual}'` : this.#actual; }
   get passed() { return this.#passed; }
   get failed() { return !this.#passed && !this.#skipped; }
   get skipped() { return this.#skipped; }
@@ -109,7 +109,8 @@ class Assertion {
   #argsToString(codes) {
     let string = ``;
     this.#args.forEach((arg, index) => {
-      let argString = `\x1b[22;39;${codes}m${arg}\x1b[39m`;
+      let argString = (typeof arg === 'string') ? `'${arg}'` : arg;
+      argString = `\x1b[22;39;${codes}m${argString}\x1b[39m`;
       if (index > 0)
         argString = `, ${argString}`;
       if (index === this.#args.length - 1) {
