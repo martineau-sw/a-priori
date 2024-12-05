@@ -68,8 +68,6 @@ class Test {
     }
 
     this.#cases.forEach(c => {
-      console.log(c);
-
       if (c.skipped) { 
         this.#skips++;
         return;
