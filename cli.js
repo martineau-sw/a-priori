@@ -1,4 +1,4 @@
-#!bin/usr/env node 
+#!/usr/bin/env node 
 
 import { importAndRunTests } from './src/a-priori.js';
 
