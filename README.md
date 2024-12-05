@@ -17,7 +17,7 @@ function as a test, and finally, append `then` with expected return.
 
 ## Overview
 
-`formulate(targetFunction, equalFunction) -> Test.builder` *static method of `Test`*
+### `formulate(targetFunction, equalFunction) -> Test.builder` *static method of `Test`*
   Creates test and sets target function and evaluation functions to determine 
   equality between actual return value and expected value. 
 
@@ -25,12 +25,23 @@ function as a test, and finally, append `then` with expected return.
   - `equalFunction`, function object with 2 parameters. For simple value types: 
   `(a, b) => a === b` is sufficent
 
-`assert(summary) -> Assertion.builder` *static member of `Test.builder`*
+  ```js
+  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+    // ...
+  ```
+
+### `assert(summary) -> Assertion.builder` *static member of `Test.builder`*
   Creates assertion and sets string that describes the assertion.
 
   - `summary`, string that describes the assertion
 
-`when(...arguments) -> Assertion.builder` *static member of `Assertion.builder`*
+  ```js
+  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+    .assert('number addition') 
+    // ...
+  ```
+
+### `when(...arguments) -> Assertion.builder` *static member of `Assertion.builder`*
   Sets arguments to supply for target function.
 
   - `...arguments`, variadic, pass these arguments as if they are to be passed
@@ -43,7 +54,7 @@ function as a test, and finally, append `then` with expected return.
       // ...
   ```
 
-`then(expected) -> Test.builder` *static member of `Assertion.builder`*
+### `then(expected) -> Test.builder` *static member of `Assertion.builder`*
   Sets expected value for assertion, returns test builder.
 
   - `expected`, expected return value of target function with `when` arguments
@@ -56,7 +67,7 @@ function as a test, and finally, append `then` with expected return.
       // ...
   ```
 
-`end() -> Test` *static method of `Test.builder`*
+### `end() -> Test` *static method of `Test.builder`*
   Submits test to testing application.
 
   ```js
@@ -68,7 +79,7 @@ function as a test, and finally, append `then` with expected return.
   .end();
   ```
 
-`skip() -> undefined`
+### `skip() -> undefined`
 *static method of `Test.builder` and `Assertion.builder`*
 *instance method of `Test` and `Assertion`*
 
