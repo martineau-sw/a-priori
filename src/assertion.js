@@ -1,10 +1,12 @@
+import Printer from "./printer.js";
+
 class Assertion {
   #summary = undefined;
-  #arguments = undefined;
-  #expects = undefined;
-  #yields = undefined;
-  #valid = false;
-  #omit = false;
+  #args = undefined;
+  #expect = undefined;
+  #actual = undefined;
+  #passed = false;
+  #skipped = false;
 
   constructor(summary) {
     console.assert(summary !== undefined, 'string summary expected');
@@ -13,31 +15,32 @@ class Assertion {
     this.#summary = summary;
   }
 
-  get arguments() { return this.#arguments; }
-  get expects() { return this.#expects; }
-  get yields() { return this.#yields; }
-  get valid() { return this.#valid; }
-  get omitted() { return this.#omit; }
+  get args() { return this.#args; }
+  get expect() { return this.#expect; }
+  get actual() { return this.#actual; }
+  get passed() { return this.#passed; }
+  get failed() { return !this.#passed && !this.#skipped; }
+  get skipped() { return this.#skipped; }
 
   static builder(summary, sequent = undefined) {
     const assertion = new Assertion(summary);
 
     const skip = function() {
-      assertion.#omit = true;
+      assertion.#skipped = true;
       return this;
     }
 
     const when = function(...args) {
-      console.assert(assertion.#arguments === undefined, 'redefining arguments\nfrom: %o\nto: %o', assertion.#arguments, args);
-      assertion.#arguments = args;
+      console.assert(assertion.#args === undefined, 'redefining args\nfrom: %o\nto: %o', assertion.#args, args);
+      assertion.#args = args;
       return this;
     }
 
     const then = function(expect) {
       console.assert(assertion.#summary !== undefined, 'summary undefined');
-      console.assert(assertion.#arguments !== undefined, 'arguments undefined');
-      assertion.#expects = expect;
-      console.assert(assertion.#expects !== undefined, 'expected value undefined');
+      console.assert(assertion.#args !== undefined, 'args undefined');
+      assertion.#expect = expect;
+      console.assert(assertion.#expect !== undefined, 'expected value undefined');
 
 
       if (sequent !== undefined) {
@@ -51,108 +54,72 @@ class Assertion {
     return { skip, when, then }
   }
 
-  omit() {
-    this.#omit = true;
+  skip() {
+    this.#skipped = true;
   }
 
   evaluate(formula, equate) {
-    this.#yields = formula(...this.#arguments);
-    this.#valid = equate(this.yields, this.expects);
-    return this.#valid;
-  }
-
-  toString(formula) {
-    return  `${this.#valid ? '🟢' : this.#omit ? '🟡' : '🔴'} ` +
-            `${this.#omit ? 'omitted' :
-            `\x1b[1m${formula.name}(${this.#formatArgsToString()}) ⊢ ${this.#valid ? `${this.#expects}` :
-            `\x1b[9m${this.#expects}\x1b[29m ${this.#yields}`
-            }`}` + `\x1b[22m\n${this.#summary}`
+    this.#actual = formula(...this.#args);
+    this.#passed = equate(this.actual, this.expect);
+    return this.#passed;
   }
 
   print(formula) {
-    const options = {
-      valid: {
-        prefix: '╿',
-        func: `\x1b[32m`, // bold, green
-        summary: '\x1b[32m', // green
-      },
-      invalid: {
-        prefix: '┿',
-        func: `\x1b[31m`, // bold, red
-        summary: '\x1b[31m', // red
-      },
-      omitted: {
-        prefix: '┊',
-        func: `\x1b[2m`, // dim
-        summary: '\x1b[2m', // dim
-      },
+    const color = this.passed ? '\x1b[22;39;32m' :
+                  this.failed ? '\x1b[22;39;31m' :
+                                '\x1b[22;39;2m'; 
 
-      cap: '└',
-      
-      info: [],
+    this.#headString(formula, color);
+    this.#bodyString(formula, color);
+    this.#footString(color);
 
-      getFnString: function(assertion) {
-
-        const signature = `${formula.name} ( ${assertion.#formatArgsToString()} )`
-        let optionSet = this.invalid;
-
-        if (assertion.#valid) {
-          optionSet = this.valid;
-          return `${optionSet.func}${optionSet.prefix}\x1b[1m ${signature} ⊢ ${assertion.#yields} \x1b[0m`;
-        }
-
-        if(assertion.#omit) {
-          optionSet = this.omitted;
-          return `${optionSet.func}${optionSet.prefix}\x1b[1m ${signature} \x1b[0m`;
-        }
-
-        this.info.push(`\x1b[2m${optionSet.summary}${signature} ⊢ ${assertion.#yields}\x1b[0m`);
-
-        return `${optionSet.func}${optionSet.prefix}\x1b[1m ${signature} ⊬ ${assertion.#expects}\x1b[0m`;
-      },
-
-      getSummaryString: function(assertion) {
-
-        const lines = this.info.length > 0 ? 
-          (() => { 
-            this.info.unshift('');
-            this.info.push('');
-            return this.info.concat(assertion.#summary.split('\n')) 
-          })() :
-          assertion.#summary.split('\n');
-
-        let optionSet = this.invalid;
-
-        if (assertion.#valid) {
-          optionSet = this.valid;
-        } else if (assertion.#omit) {
-          optionSet = this.omitted;
-        }
-
-        return lines.map((line, index) => {
-          let prefix = '┊'; 
-          if (index === lines.length - 1) prefix = this.cap;
-          return `${optionSet.summary}${prefix} ${line} \x1b[0m`;
-        });
-      }
-    };
-    
-    console.group();
-    console.log(options.getFnString(this));
-    options.getSummaryString(this).forEach((string) => {
-      console.log(string);
-    })
-    console.groupEnd();
+    Printer.print(1);
   }
 
-  #formatArgsToString() {
-    return this.#arguments.reduce((string, element, index) => {
-      if (typeof element === 'string') { 
-        return `${string}, ` + `"${element}"`; 
-      }
+  #headString(formula, color) {
+    const prefix = this.passed ? `╿` : 
+                  (this.failed ? `┯` : 
+                                 `╤`);
+    
+    const signature = `${color}${prefix} ${this.#skipped ? '\x1b[22;2m' : '\x1b[22;1m'}${formula}`; 
+    const args = this.#argsToString('36');
+    const op = '\x1b[22m' + (this.#passed ? '=' : '≠');
+    const expect = `\x1b[1m${this.expect}`;
+    const result = this.#skipped ? '' : `${color}${op} ${expect}`;
 
-      return `${string}, ` + `${element.toString()}`; 
+    Printer.enqueue(`${signature}(${args}\x1b[1m) ${result}`)
+  }
+
+  #bodyString(formula, color) {
+    if (!this.failed) return;
+
+    const signature = `${color}┊ \x1b[22;2m${formula}`
+    const args = this.#argsToString('35;2');
+    const op = `\x1b[22;2m=`;
+    const actual = `\x1b[1;2m${this.actual}`;
+    Printer.enqueue(`┊`);
+    Printer.enqueue(`${signature}(${args}\x1b[2m) ${op} \x1b[35m${actual}`);
+    Printer.enqueue(`${color}┊`);
+  }
+
+  #footString(color) {
+    Printer.enqueue(`${color}└ ${this.#summary}`);
+  }
+
+  #argsToString(codes) {
+    let string = ``;
+    this.#args.forEach((arg, index) => {
+      let argString = `\x1b[22;39;${codes}m${arg}\x1b[39m`;
+      if (index > 0)
+        argString = `, ${argString}`;
+      if (index === this.#args.length - 1) {
+        if (this.passed) argString += `\x1b[32m`
+        else if (this.failed) argString += `\x1b[31m`;
+        else argString += `\x1b[2m`;
+      }
+      string += argString;
     });
+    return string;
     
   }
 }

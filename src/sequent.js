@@ -1,15 +1,17 @@
 import { addSequent } from './a-priori.js'
 import Assertion from './assertion.js';
+import Printer from './printer.js';
 
 class Sequent {
   #formula = undefined;
   #predicate = undefined;
   #cases = undefined;
 
-  #invalid = 0;
-  #omissions = 0;
+  #passes = 0;
+  #fails = 0;
+  #skips = 0;
 
-  #omit = false;
+  #skipped = false;
 
   constructor(formula, equate) {
     console.assert(typeof formula === 'function', 'function expected %o', formula);
@@ -22,18 +24,19 @@ class Sequent {
   get predicate() { return this.#predicate; }
   get cases() { return this.#cases; }
 
-  get proven() { return this.#invalid === 0; }
-  get omitted() { return this.#omit; }
+  get passed() { return this.#passes === (this.#cases.length - this.#skips); }
+  get failed() { return this.#fails === (this.#cases.length - this.#skips); }
+  get skipped() { return this.#skipped; }
 
-  get valid() { return this.#cases.length - (this.#invalid + this.#omissions); }
-  get invalid() { return this.#invalid; }
-  get omissions() { return this.#omissions; }
+  get passes() { return this.#passes; }
+  get fails() { return this.#fails; }
+  get skips() { return this.#skips; }
 
   static builder(formula, equate) {
     const sequent = new Sequent(formula, equate);
 
-    const skip = function() {
-      sequent.#omit = true;
+    const skip = function() { 
+      sequent.#skipped = true;
       return this;
     }
 
@@ -42,52 +45,64 @@ class Sequent {
       sequent.#cases.push(assertion);
     }
 
-    const assertion = function(summary) {
+    const assert = function(summary) {
       return Assertion(summary, this);
     }
 
     const end = function() {
       addSequent(sequent);
+      return sequent;
     }
 
-    return { add, skip, assertion, end }
+    return { add, skip, assert, end }
   }
 
-  toString() {
-    let string = '';
-    const outcome = this.#invalid === 0 ? '🟢' : '🔴';
-    string += ` ${outcome} ${this.#formula.name}: ${this.valid} passed, ${this.#invalid} failed, ${this.#omissions} skipped\n`;
-    this.#cases.forEach((c, i) => {
-        string += `${' '.repeat(4)}${c.toString(this.#formula)}\n`;
-    });
-
-    return string;
+  skip() {
+    this.#skipped = true;
   }
 
   evaluate() {
+    if(this.#skipped) {
+      this.print();
+      return;
+    }
+
     this.#cases.forEach(c => {
-      if (c.omitted) { 
-        this.#omissions++;
+      if (c.skipped) { 
+        this.#skips++;
         return;
       }
-      if (!c.evaluate(this.#formula, this.#predicate)) this.#invalid++;
+      if (c.evaluate(this.#formula, this.#predicate)) {
+        this.#passes++;
+        return;
+      } 
+      this.#fails++;
     });
 
-    this.#print();
+    this.print();
   }
 
-  #print() {
-    console.group();
-    console.log(`${this.#invalid === 0 ? `\x1b[1;32m+` : '\x1b[1;31m-'}` +  
-      `\x1b[0;1m${this.#formula.name}:` + 
-      `\x1b[1;32m ${this.valid > 0 ? this.valid : '-'}` + 
-      `\x1b[0m \x1b[1;31m${this.#invalid > 0 ? this.#invalid : '-'}` + 
-      `\x1b[0m \x1b[1;2m${this.#omissions > 0 ? this.#omissions : '-'}\x1b[0m`);
-    this.#cases.forEach((c, i) => {
-      c.print(this.#formula);
-    });
-    console.log();
-    console.groupEnd();
+  print() {
+    const color = this.skipped ? '\x1b[22;2m' : // dimmed
+                  this.passed ? '\x1b[39;32m' : // green
+                  this.failed ? '\x1b[39;31m' : // red
+                                '\x1b[39;33m';  // yellow
+
+    const prefix = color + (this.skipped ? `*` : 
+                            this.passed ? `+` :
+                            this.failed ? '-' : 
+                                          `~`);
+
+    const signature = `${color}\x1b[1m${this.#formula.name}`;
+    const passes = this.passes ? `\x1b[22;39;32m${this.passes}` : `\x1b[22;2m-`;
+    const fails = this.fails ? `\x1b[22;39;31m${this.fails}` : `\x1b[22;2m-`;
+    const skips = `\x1b[39;22;2m` + (this.skips ? `${this.skips}` : `-`);
+    
+    Printer.enqueue(`${prefix} ${signature}: ${passes} ${fails} ${skips}`);
+    // Printer.enqueue(`${color}${this.#formula.name}`)
+    Printer.print();
+    if(!this.#skipped) this.#cases.forEach(c => c.print(this.#formula.name));
+    
   }
 }
 

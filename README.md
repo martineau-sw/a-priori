@@ -8,7 +8,7 @@ requirements as axioms formulated as material conditions.
 (e.g. $P(x, y, z) \longrightarrow Q $)
 
 Takes inspiration from the information gathered on Wikipedia of 
-formal logic systems in span of a single sleepless night. 
+formal logic systems in span of a single sleepless night.
 
 ## Assertion
 
