@@ -3,79 +3,73 @@
 Lightweight unit test micro-library for test-driven development 
 of small personal projects and exercises. 
 
-Created with the intent to ~~quickly~~ vaguely formalize unit/system 
-requirements as axioms formulated as material conditions. 
-(e.g. $P(x, y, z) \longrightarrow Q $)
-
-Takes inspiration from the information gathered on Wikipedia of 
-formal logic systems in span of a single sleepless night.
-
-## Assertion
-
-An object consisting of a summary, function arguments, and 
-expected output.
-
-## Sequent
-
-An object consisting of a function as the subject of test cases 
-(formula), a callback to predicate equality between the returned
-value and expected output, and a set of assertions.
-
 ## Usage
 
-1. Create tests within `project_directory/tests/` with `.test.js`
-suffix
-2. Default import `sequent.js`
-3. Declare sequent with subject function and equality function
-4. Add assertions using chained function calls
-  - `when(arguments)` accepts arguments to pass into subject 
-  function
-  - `then(expected)` accepts expected return value of subject
-  function `when` parameters are true.
-5. `npx run-func some/dir/a-priori.js run`
+1. Create test file: `./tests/*.test.js` where `*` is some name
+2. Default import `a-priori`: this is the `formulate` function. It's implemented 
+as a builder.
+3. Call `formulate` with target function and an *equals* function with 2 
+parameters
+4. Append `assert`s with a summary, append `when` with arguments of target
+function as a test, and finally, append `then` with expected return.
+5. Call `end` at the end of the final `then` of the final `assert`
+6. Run `$ a-priori` from project root
 
-### Example
+## Overview
 
-```
-project/
-| src/
-| | add.js
-| | sub.js
-| tests/
-| | add.test.js
-| | sub.test.js
-```
+`formulate(targetFunction, equalFunction) -> Test.builder` *static method of `Test`*
+  Creates test and sets target function and evaluation functions to determine 
+  equality between actual return value and expected value. 
 
-```js
-// src/add.js
-function add() {
-  return +a + b;
-}
+  - `targetFunction`, any named function object
+  - `equalFunction`, function object with 2 parameters. For simple value types: 
+  `(a, b) => a === b` is sufficent
 
-// src/sub.js
-function sub() {
-  return a - b;
-}
-```
+`assert(summary) -> Assertion.builder` *static member of `Test.builder`*
+  Creates assertion and sets string that describes the assertion.
 
-```js
-// tests/sub.test.js
+  - `summary`, string that describes the assertion
 
-import sequent from './some/dir/to/sequent.js';
+`when(...arguments) -> Assertion.builder` *static member of `Assertion.builder`*
+  Sets arguments to supply for target function.
 
-sequent (sub, (a, b) => a === b)
-  .assertion('numbers: positive difference')
-    .when(2, 1)
-    .then(1)
-  .assertion('numbers: negative difference')
-    .when(1, 2)
-    .then(-1)
-  .assertion('numbers: handles small floats')
-    .when(0.000005, 0.000008)
-    .then(-0.000003)
-  .assertion('strings: rejects strings').skip()
-    .when('-2', '-5')
-    .then(undefined)
-.end();
-```
+  - `...arguments`, variadic, pass these arguments as if they are to be passed
+  to the target function
 
+  ```js
+  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+    .assert('number addition') 
+      .when(2, 2) // add(2, 2)
+      // ...
+  ```
+
+`then(expected) -> Test.builder` *static member of `Assertion.builder`*
+  Sets expected value for assertion, returns test builder.
+
+  - `expected`, expected return value of target function with `when` arguments
+
+  ```js
+  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+    .assert('number addition') 
+      .when(2, 2)
+      .then(4)
+      // ...
+  ```
+
+`end() -> Test` *static method of `Test.builder`*
+  Submits test to testing application.
+
+  ```js
+  formulate(function add(a, b) { return a + b; }, (x, y) => x === y)
+    .assert('number addition') 
+      .when(2, 2)
+      .then(4)
+      // ...
+  .end();
+  ```
+
+`skip() -> undefined`
+*static method of `Test.builder` and `Assertion.builder`*
+*instance method of `Test` and `Assertion`*
+
+  Skips test or assertion, can be called on builder or instances.

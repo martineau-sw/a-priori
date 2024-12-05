@@ -2,7 +2,7 @@ import { addSequent } from './a-priori.js'
 import Assertion from './assertion.js';
 import Printer from './printer.js';
 
-class Sequent {
+class Test {
   #formula = undefined;
   #predicate = undefined;
   #cases = undefined;
@@ -33,16 +33,16 @@ class Sequent {
   get skips() { return this.#skips; }
 
   static builder(formula, equate) {
-    const sequent = new Sequent(formula, equate);
+    const test = new Test(formula, equate);
 
     const skip = function() { 
-      sequent.#skipped = true;
+      test.#skipped = true;
       return this;
     }
 
     const add = function(assertion) {
-      if (sequent.#cases === undefined) sequent.#cases = [];
-      sequent.#cases.push(assertion);
+      if (test.#cases === undefined) test.#cases = [];
+      test.#cases.push(assertion);
     }
 
     const assert = function(summary) {
@@ -50,8 +50,8 @@ class Sequent {
     }
 
     const end = function() {
-      addSequent(sequent);
-      return sequent;
+      addSequent(test);
+      return test;
     }
 
     return { add, skip, assert, end }
@@ -106,4 +106,4 @@ class Sequent {
   }
 }
 
-export default Sequent.builder;
+export default Test.builder;

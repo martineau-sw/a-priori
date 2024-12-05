@@ -1,4 +1,4 @@
-import formulate from "../src/sequent.js";
+import formulate from "../src/test.js";
 
 function add(a, b) {
   return a + b;
