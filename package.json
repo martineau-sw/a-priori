@@ -1,7 +1,7 @@
 {
   "name": "a-priori",
   "version": "0.0.0",
-  "description": "Personal JS testing micro-library",
+  "description": "Assertion  testing microlib",
   "main": "index.js",
   "bin": {
     "a-priori": "cli.js"
@@ -16,8 +16,5 @@
   },
   "keywords": [],
   "author": "Seth Martineau",
-  "devDependencies": {
-    "a-priori": "^0.0.0"
-  },
   "license": "MIT"
 }
