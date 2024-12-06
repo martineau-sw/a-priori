@@ -86,7 +86,7 @@ export class Assertion {
     const signature = `${color}${prefix} ${this.#skipped ? '\x1b[22;2m' : '\x1b[22;1m'}${formula}`; 
     const args = this.#argsToString('36');
     const op = '\x1b[22m' + (this.#passed ? '=' : '≠');
-    const expect = `\x1b[1m${this.expect}`;
+    const expect = `\x1b[1m${this.#stringifyValue(this.#expect)}`;
     const result = this.#skipped ? '' : `${color}${op} ${expect}`;
 
     Printer.enqueue(`${signature}(${args}\x1b[1m) ${result}`)
@@ -98,20 +98,20 @@ export class Assertion {
     const signature = `${color}┊ \x1b[22;2m${formula}`
     const args = this.#argsToString('35;2');
     const op = `\x1b[22;2m=`;
-    const actual = `\x1b[1;2m${this.actual}`;
+    const actual = `\x1b[1;2m${this.#stringifyValue(this.#actual)}`;
     Printer.enqueue(`┊`);
     Printer.enqueue(`${signature}(${args}\x1b[2m) ${op} \x1b[35m${actual}`);
     Printer.enqueue(`${color}┊`);
   }
 
   #footString(color) {
-    Printer.enqueue(`${color}└ ${this.#summary}`);
+    Printer.enqueue(`${color}└ ${this.#summary}\x1b[39;22m`);
   }
 
   #argsToString(codes) {
     let string = ``;
     this.#args.forEach((arg, index) => {
-      let argString = (typeof arg === 'string') ? `'${arg}'` : arg;
+      let argString = this.#stringifyValue(arg);
       argString = `\x1b[22;39;${codes}m${argString}\x1b[39m`;
       if (index > 0)
         argString = `, ${argString}`;
@@ -124,6 +124,14 @@ export class Assertion {
     });
     return string;
     
+  }
+
+  #stringifyValue(value) {
+    switch(typeof value) {
+      case 'object': return JSON.stringify(value);
+      case 'string': return `'${value}'`;
+      return `${value}`;
+    }
   }
 }
 
