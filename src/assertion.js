@@ -97,12 +97,12 @@ export class Assertion {
       if (i === 0) {
         lines.push(string.slice(0, found));
       } else {
-        lines.push(color + '\x1b[22m│ \x1b[1m' + string.slice(i + 1, found));
+        lines.push(color + '  \x1b[22m│ \x1b[1m' + string.slice(i + 1, found));
       }
       i = found;
       found = string.indexOf('\n', found + 1);
     }
-    lines.push('\x1b[22m│ \x1b[1m' + string.slice(i + 1, string.length));
+    lines.push('  \x1b[22m│ \x1b[1m' + string.slice(i + 1, string.length));
 
     
 
