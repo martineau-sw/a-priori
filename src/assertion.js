@@ -16,8 +16,8 @@ export class Assertion {
   }
 
   get args() { return this.#args; }
-  get expect() { return typeof this.#expect === 'string' ? `'${this.#expect}'` : this.#expect; }
-  get actual() { return typeof this.#actual === 'string' ? `'${this.#actual}'` : this.#actual; }
+  get expect() { return this.#expect; }
+  get actual() { return this.#actual; }
   get passed() { return this.#passed; }
   get failed() { return !this.#passed && !this.#skipped; }
   get skipped() { return this.#skipped; }
@@ -82,14 +82,31 @@ export class Assertion {
     const prefix = this.passed ? `╿` : 
                   (this.failed ? `┯` : 
                                  `╤`);
-    
+    const lines = [];
     const signature = `${color}${prefix} ${this.#skipped ? '\x1b[22;2m' : '\x1b[22;1m'}${formula}`; 
     const args = this.#argsToString('36');
     const op = '\x1b[22m' + (this.#passed ? '=' : '≠');
     const expect = `\x1b[1m${this.#stringifyValue(this.#expect)}`;
     const result = this.#skipped ? '' : `${color}${op} ${expect}`;
 
-    Printer.enqueue(`${signature}(${args}\x1b[1m) ${result}`)
+    const string = `${signature} ( ${args}\x1b[1m ) ${result}`;
+
+    let i = 0;
+    let found = string.indexOf('\n');
+    while (found !== -1) {
+      if (i === 0) {
+        lines.push(string.slice(0, found));
+      } else {
+        lines.push(color + '\x1b[22m│ \x1b[1m' + string.slice(i + 1, found));
+      }
+      i = found;
+      found = string.indexOf('\n', found + 1);
+    }
+    lines.push('\x1b[22m│ \x1b[1m' + string.slice(i + 1, string.length));
+
+    
+
+    lines.forEach(line => { Printer.enqueue(line) });
   }
 
   #bodyString(formula, color) {
@@ -99,9 +116,28 @@ export class Assertion {
     const args = this.#argsToString('35;2');
     const op = `\x1b[22;2m=`;
     const actual = `\x1b[1;2m${this.#stringifyValue(this.#actual)}`;
-    Printer.enqueue(`┊`);
-    Printer.enqueue(`${signature}(${args}\x1b[2m) ${op} \x1b[35m${actual}`);
-    Printer.enqueue(`${color}┊`);
+
+    const string = `${signature}(${args}\x1b[2m) ${op} \x1b[35m${actual}`
+
+    const lines = [];
+    lines.push(`\x1b[22m┊`);
+    let i = 0;
+    let found = string.indexOf('\n');
+    while (found !== -1) {
+      if (i === 0) {
+        lines.push(string.slice(0, found));
+      } else {
+        lines.push(color + '\x1b[22m┊ \x1b[2m' + string.slice(i + 1, found));
+      }
+      i = found;
+      found = string.indexOf('\n', found + 1);
+    }
+
+    lines.push('\x1b[22m┊ \x1b[2m' + string.slice(i + 1, string.length));
+    lines.push(`${color}┊`)
+    
+    lines.forEach(line => { Printer.enqueue(line) });
+
   }
 
   #footString(color) {
@@ -113,6 +149,7 @@ export class Assertion {
     this.#args.forEach((arg, index) => {
       let argString = this.#stringifyValue(arg);
       argString = `\x1b[22;39;${codes}m${argString}\x1b[39m`;
+      if (argString.length > 40) argString = '\n  ' + argString;
       if (index > 0)
         argString = `, ${argString}`;
       if (index === this.#args.length - 1) {
@@ -128,7 +165,7 @@ export class Assertion {
 
   #stringifyValue(value) {
     switch(typeof value) {
-      case 'object': return JSON.stringify(value);
+      case 'object': return '\n' + JSON.stringify(value, null, 2).replaceAll(/(?<=\s)(?<!:\s)"|"(?=:)/gm, '');
       case 'string': return `'${value}'`;
       return `${value}`;
     }

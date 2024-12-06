@@ -101,9 +101,8 @@ class Test {
     const skips = `\x1b[39;22;2m` + (this.skips ? `${this.skips}` : `-`);
     
     Printer.enqueue(`${prefix} ${signature}: ${passes} ${fails} ${skips}\x1b[39;22m`);
-    // Printer.enqueue(`${color}${this.#formula.name}`)
     Printer.print();
-    if(!this.#skipped) this.#cases.forEach(c => c.print(this.#formula.name));
+    if(!this.#skipped) this.#cases.forEach(c => c.print(funcName));
     
   }
 }
