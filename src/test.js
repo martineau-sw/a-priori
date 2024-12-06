@@ -96,8 +96,8 @@ class Test {
     const funcName = !this.#formula.name ? this.#formula.toString() : this.#formula.name
 
     const signature = `${color}\x1b[1m${funcName}`;
-    const passes = this.passes ? `\x1b[22;39;32m${this.passes}` : `\x1b[22;2m-`;
-    const fails = this.fails ? `\x1b[22;39;31m${this.fails}` : `\x1b[22;2m-`;
+    const passes = this.passes ? `\x1b[22;39;32m${this.passes}` : `\x1b[39;22;2m-`;
+    const fails = this.fails ? `\x1b[22;39;31m${this.fails}` : `\x1b[39;22;2m-`;
     const skips = `\x1b[39;22;2m` + (this.skips ? `${this.skips}` : `-`);
     
     Printer.enqueue(`${prefix} ${signature}: ${passes} ${fails} ${skips}\x1b[39;22m`);
