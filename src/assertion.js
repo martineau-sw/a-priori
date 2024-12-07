@@ -90,21 +90,23 @@ export class Assertion {
     const result = this.#skipped ? '' : `${color}${op} ${expect}`;
 
     const string = `${signature} ( ${args}\x1b[1m ) ${result}`;
+    let start = 0;
+    let end = string.indexOf('\n');
 
-    let i = 0;
-    let found = string.indexOf('\n');
-    while (found !== -1) {
-      if (i === 0) {
-        lines.push(string.slice(0, found));
-      } else {
-        lines.push(color + '\x1b[22m│   \x1b[1m' + string.slice(i + 1, found));
+    do {
+      console.log(start, end);
+      let header = string.slice(start, end);
+      if (start > 0) {
+        header = `${color}\x1b[22m│ \x1b[1m${header}`;
       }
-      i = found;
-      found = string.indexOf('\n', found + 1);
-    }
-    lines.push('\x1b[22m│   \x1b[1m' + string.slice(i + 1, string.length));
+      start = end + 1;
+      end = string.indexOf('\n', start);
+      // console.log(lines);
 
-    
+      lines.push(header);
+    } while (end > start);
+
+    lines.push(`\x1b[22m│ \x1b[1m${string.slice(start)}`);
 
     lines.forEach(line => { Printer.enqueue(line) });
   }
@@ -115,9 +117,9 @@ export class Assertion {
     const signature = `${color}┊ \x1b[22;2m${formula}`
     const args = this.#argsToString('35;2');
     const op = `\x1b[22;2m=`;
-    const actual = `\x1b[1;2m${this.#stringifyValue(this.#actual)}`;
+    const actual = `\x1b[2m${this.#stringifyValue(this.#actual)}`;
 
-    const string = `${signature}(${args}\x1b[2m) ${op} \x1b[35m${actual}`
+    const string = `${signature} ( ${args} \x1b[2m) ${op} ${actual}`
 
     const lines = [];
     lines.push(`\x1b[22m┊`);
@@ -165,9 +167,9 @@ export class Assertion {
 
   #stringifyValue(value) {
     switch(typeof value) {
-      case 'object': return '\n' + JSON.stringify(value, null, 2).replaceAll(/(?<=\s)(?<!:\s)"|"(?=:)/gm, '');
+      case 'object': return JSON.stringify(value, null, 2).replaceAll(/(?<=\s)(?<!:\s)"|"(?=:)/gm, '');
       case 'string': return `'${value}'`;
-      return `${value}`;
+      default: return `${value}`;
     }
   }
 }
