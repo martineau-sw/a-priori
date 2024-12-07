@@ -92,21 +92,18 @@ export class Assertion {
     const string = `${signature} ( ${args}\x1b[1m ) ${result}`;
     let start = 0;
     let end = string.indexOf('\n');
-
     do {
-      console.log(start, end);
       let header = string.slice(start, end);
       if (start > 0) {
-        header = `${color}\x1b[22m│ \x1b[1m${header}`;
+        header = `${color}\x1b[22m│  \x1b[1m${header}`;
       }
       start = end + 1;
       end = string.indexOf('\n', start);
-      // console.log(lines);
 
       lines.push(header);
     } while (end > start);
 
-    lines.push(`\x1b[22m│ \x1b[1m${string.slice(start)}`);
+    if(start > 0) lines.push(`\x1b[22m│ \x1b[1m${string.slice(start)}`);
 
     lines.forEach(line => { Printer.enqueue(line) });
   }
