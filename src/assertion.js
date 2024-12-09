@@ -164,7 +164,7 @@ export class Assertion {
 
   #stringifyValue(value) {
     switch(typeof value) {
-      case 'object': return JSON.stringify(value, null, 2).replaceAll(/(?<=\s)(?<!:\s)"|"(?=:)/gm, '');
+      case 'object': return JSON.stringify(value, null, 2);
       case 'string': return `'${value}'`;
       default: return `${value}`;
     }
