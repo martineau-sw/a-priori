@@ -92,7 +92,7 @@ export class Assertion {
     const string = `${signature} ( ${args}\x1b[1m ) ${result}`;
     let start = 0;
     let end = string.indexOf('\n');
-    do {
+    while (end > start) {
       let header = string.slice(start, end);
       if (start > 0) {
         header = `${color}\x1b[22m│  \x1b[1m${header}`;
@@ -101,9 +101,9 @@ export class Assertion {
       end = string.indexOf('\n', start);
 
       lines.push(header);
-    } while (end > start);
+    }
 
-    if(start > 0) lines.push(`\x1b[22m│ \x1b[1m${string.slice(start)}`);
+    lines.push(`${start === 0 ? '' :`\x1b[22m│ `}\x1b[1m${string.slice(start)}`);
 
     lines.forEach(line => { Printer.enqueue(line) });
   }
@@ -111,7 +111,8 @@ export class Assertion {
   #bodyString(formula, color) {
     if (!this.failed) return;
 
-    const signature = `${color}┊ \x1b[22;2m${formula}`
+    const prefix = `${color}┊\x1b[2m`
+    const signature = `\x1b[22;2m${formula}`
     const args = this.#argsToString('35;2');
     const op = `\x1b[22;2m=`;
     const actual = `\x1b[2m${this.#stringifyValue(this.#actual)}`;
@@ -119,21 +120,21 @@ export class Assertion {
     const string = `${signature} ( ${args} \x1b[2m) ${op} ${actual}`
 
     const lines = [];
-    lines.push(`\x1b[22m┊`);
-    let i = 0;
-    let found = string.indexOf('\n');
-    while (found !== -1) {
-      if (i === 0) {
-        lines.push(string.slice(0, found));
-      } else {
-        lines.push(color + '\x1b[22m┊ \x1b[2m' + string.slice(i + 1, found));
-      }
-      i = found;
-      found = string.indexOf('\n', found + 1);
+
+    lines.push(`${color}┊`);
+    let start = 0;
+    let end = string.indexOf('\n');
+
+    while(end > start) {
+      let line = `${prefix} ${string.slice(start, end)}`;
+      start = end + 1;
+      end = string.indexOf('\n', start);
+
+      lines.push(line);
     }
 
-    lines.push('\x1b[22m┊ \x1b[2m' + string.slice(i + 1, string.length));
-    lines.push(`${color}┊`)
+    lines.push(`${prefix} ${string.slice(start)}`);
+    lines.push(`${color}┊`);
     
     lines.forEach(line => { Printer.enqueue(line) });
 
