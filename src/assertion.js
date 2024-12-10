@@ -102,9 +102,8 @@ export class Assertion {
 
       lines.push(header);
     }
-
+  
     lines.push(`${start === 0 ? '' :`\x1b[22m│ `}\x1b[1m${string.slice(start)}`);
-
     lines.forEach(line => { Printer.enqueue(line) });
   }
 
@@ -165,9 +164,9 @@ export class Assertion {
 
   #stringifyValue(value) {
     switch(typeof value) {
-      case 'object': return JSON.stringify(value, null, 2);
+      // case 'object': return JSON.stringify(value, null, 2);
       case 'string': return `'${value}'`;
-      default: return `${value}`;
+      default: return `${value.toString()}`;
     }
   }
 }

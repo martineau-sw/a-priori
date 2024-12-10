@@ -88,10 +88,10 @@ class Test {
                   this.failed ? '\x1b[39;31m' : // red
                                 '\x1b[39;33m';  // yellow
 
-    const prefix = color + (this.skipped ? `*` : 
+    const prefix = color + (this.skipped ? `//` : 
                             this.passed ? `+` :
-                            this.failed ? '-' : 
-                                          `~`);
+                            this.failed ? '!' : 
+                                          `?`);
 
     const funcName = !this.#formula.name ? this.#formula.toString() : this.#formula.name
 
