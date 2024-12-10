@@ -60,7 +60,7 @@ export class Assertion {
 
   evaluate(formula, equate) {
     this.#actual = formula(...this.#args);
-    this.#passed = equate(this.actual, this.expect);
+    this.#passed = equate(this.#actual, this.#expect);
     return this.#passed;
   }
 
