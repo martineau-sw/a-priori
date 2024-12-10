@@ -95,7 +95,7 @@ export class Assertion {
     while (end > start) {
       let header = string.slice(start, end);
       if (start > 0) {
-        header = `${color}\x1b[22m│  \x1b[1m${header}`;
+        header = `${color}\x1b[22m│ \x1b[1m${header}`;
       }
       start = end + 1;
       end = string.indexOf('\n', start);
