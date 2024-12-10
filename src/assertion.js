@@ -92,7 +92,7 @@ export class Assertion {
     const string = `${signature} ( ${args}\x1b[1m ) ${result}`;
     let start = 0;
     let end = string.indexOf('\n');
-    while (end > start) {
+    while (end >= start) {
       let header = string.slice(start, end);
       if (start > 0) {
         header = `${color}\x1b[22m│ \x1b[1m${header}`;
